@@ -32,8 +32,11 @@ bool isTCP(const u_char  *packet){
     }
 }
 
-int getSize(const u_char *packet){
-    return (packet[13]&0xF);
+int getIpHeaderSize(const u_char *packet){
+    return (packet[14]&0xF) * 4;
+}
+int getTCPHeaderSize(const u_char *packet, int tcpstart){
+    return ((packet[14+tcpstart + 12] & 0xF0) >> 4)*4;
 }
 
 void usage() {
@@ -58,7 +61,9 @@ int main(int argc, char* argv[]) {
   while (true) {
     struct pcap_pkthdr* header;
     const u_char* packet;
-  //  uint8_t *packet;
+    int totHeaderSize=0;
+    int ipHeaderSize = 0;
+    int TCPHeaderSize = 0;
 
     int res = pcap_next_ex(handle, &header, &packet);
     if (res == 0) continue;
@@ -68,10 +73,15 @@ int main(int argc, char* argv[]) {
 
 
     if(isIP(packet)){
-
         if(isTCP(packet)){
+            ipHeaderSize = getIpHeaderSize(packet);
+            TCPHeaderSize = getTCPHeaderSize(packet, ipHeaderSize);
+            totHeaderSize = 14+ipHeaderSize+TCPHeaderSize;
             printf("--------------------------------------------------\n");
             printf("%u bytes captured\n\n", header->caplen);
+            printf("id header size : %d\n", ipHeaderSize);
+            printf("tcp header size : %d\n", TCPHeaderSize);
+
             printf("Dest mac\t:");
             print_mac(&packet[0]);
             printf("Source mac \t:");
@@ -84,13 +94,13 @@ int main(int argc, char* argv[]) {
             print_ip(&packet[14+13-1]);
 
             printf("\nDest Port \t:");
-            print_port(&packet[14+20+2]);
+            print_port(&packet[14+ipHeaderSize+2]);
             printf("Source Port \t:");
-            print_port(&packet[14+20]);
+            print_port(&packet[14+ipHeaderSize]);
 
             printf("\nTCP data:");
-            for(unsigned int i = 54; i < header->caplen ; i++){
-                if((i-54) % 15 == 0){
+            for(int i = totHeaderSize; i < header->caplen ; i++){
+                if((i-totHeaderSize) % 15 == 0){
                     printf("\n");
                 }
                 printf("%02X ", packet[i]);
