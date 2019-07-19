@@ -12,7 +12,7 @@ void print_ip(const u_char  *ip) {
 }
 
 void print_port(const u_char  *port) {
-    printf("%u\n", ( (*port << 8) | *(port+1)));
+    printf("%u\n", ( ((*port) << 8) | *(port+1)));
 }
 
 bool isIP(const u_char  *packet){
@@ -84,9 +84,9 @@ int main(int argc, char* argv[]) {
             print_ip(&packet[14+13-1]);
 
             printf("\nDest Port \t:");
-            print_port(&packet[14+20+2-1]);
+            print_port(&packet[14+20+2]);
             printf("Source Port \t:");
-            print_port(&packet[14+20-1]);
+            print_port(&packet[14+20]);
 
             printf("\nTCP data:");
             for(unsigned int i = 54; i < header->caplen ; i++){
