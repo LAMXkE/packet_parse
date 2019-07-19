@@ -99,11 +99,8 @@ int main(int argc, char* argv[]) {
             print_port(&packet[14+ipHeaderSize]);
 
             printf("\nTCP data:");
-            for(int i = totHeaderSize; i < header->caplen ; i++){
-                if((i-totHeaderSize) % 15 == 0){
-                    printf("\n");
-                }
-                printf("%02X ", packet[i]);
+            for(int i = 0; i < 10 && i+totHeaderSize < header->caplen; i++){
+                printf("%02X ", packet[i+totHeaderSize]);
             }
             printf("\n");
             printf("--------------------------------------------------\n");
